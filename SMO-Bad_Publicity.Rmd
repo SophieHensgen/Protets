@@ -1,0 +1,75 @@
+---
+title: "SMO-Bad Publicity"
+author: "Sophie Hensgen"
+date: "6/24/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packagest, include=FALSE}
+library(foreign)
+```
+
+```{r data set, echo=FALSE}
+prodat <- read.dta("/Users/sophiehensgen/Webscraping-LS-Methode/Protets/prodat_1950-2002.dta")
+prodat
+```
+
+
+Variables which I will use:
+- ARTZAHL --> Artikelanzahl
+- ZAHL --> Anzahl der Teilnehmer
+- NCLAIM1--> Themenfeld 
+- BEWEG --> Bewegung
+- BEWEG1 & BEWEG2 --> Welche Bewegung
+- AUSJA --> Gegenproteste
+- AUSPEN --> Gegen wen Gegenproteste
+- GEGJA --> Ist PE ein Gegenprotest?
+- GEGENPEN --> Gegen wen?
+- OBJEKT1 & OBJEKT2 --> Gegen wen richtet es sich?
+- FORM1 & FORM21 --> Aktionsform
+- SCHADEN --> Sachbeschädigung
+- FESTNAHM --> Wie viele Festnehmen
+- VERLETZT --> Verletzte?
+- VERLPROZ --> Verletzte Protestierende.
+- VERLPOL --> Verletzte Polizei
+- VERLGEG --> Verletzte Gegner
+- VERLDRIT --> Verletzte Unbeteiligte
+- TOTE --> Tote
+- TOTPRO -->
+- TOTPOL -->
+- TOTGEG -->
+- TOTDRIT -->
+- VSTATE --> Statements von Interessengruppen
+- VSTABE1 & VSTABE2 --> Bewertung
+- SSTATE --> Statements von politischadministrativer Seite
+- STATBE1 & STATBE2 --> Bewertung
+
+```{r packagest, include=FALSE}
+library(foreign)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
