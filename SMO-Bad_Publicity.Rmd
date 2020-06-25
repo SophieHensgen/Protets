@@ -11,55 +11,163 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r packagest, include=FALSE}
 library(foreign)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
 ```
 
 ```{r data set, echo=FALSE}
-prodat <- read.dta("/Users/sophiehensgen/Webscraping-LS-Methode/Protets/prodat_1950-2002.dta")
+prodat <- read.dta("/Users/sophiehensgen/Webscraping-LS-Methode/Protets/prodat_1950-2002_OG.dta")
 prodat
+
+```
+```{r data set, echo=FALSE}
+#new data set with all the important variables
+
+pro <-  select(prodat, pen, nclaim1, nclaim2, jahrn, monatn, tagn, etag, tini, tinitx1, tinitx2, tinico1, tinico2, tinifu1, tinifu2, tverb, tverb1, tverb2, tverbco1, tverbco2, tverbfu1, tverbfu1, kam, kamco, tallzahl, nclaim1, nclaim2, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, tote, artzahl, etag, form1, form2, schaden, festnahm, ort1, ort2, brd1, brd2)
+
+pro$vstate
+prod <- na.omit(pro, cols=="vstate", invert=FALSE)
+prod
+
+
+p <- select(prodat, vstate, tverbco1, tverbco2, tinico1, tinico2)
+p[p==""]<-NA
+p <- p %>% replace_na(list(tverbco1 = "not", tverbco2 = "not", tinico1 = "not", tinico2 = "not"))
+p <- na.omit(p, cols=="vstate")
+p
+
+library(dplyr)
+df <- tibble(x = c(1, 2, NA), y = c("a", NA, "b"), z = list(1:5, NULL, 10:20))
+df %>% replace_na(list(x = 0, y = "unknown"))
+df %>% mutate(x = replace_na(x, 0))
 ```
 
+```{r Creation of new Variable, include=FALSE}
+#Variables I will use to find out which protest belong together
 
-Variables which I will use:
-- ARTZAHL --> Artikelanzahl
-- ZAHL --> Anzahl der Teilnehmer
-- NCLAIM1--> Themenfeld 
-- BEWEG --> Bewegung
-- BEWEG1 & BEWEG2 --> Welche Bewegung
-- AUSJA --> Gegenproteste
-- AUSPEN --> Gegen wen Gegenproteste
-- GEGJA --> Ist PE ein Gegenprotest?
-- GEGENPEN --> Gegen wen?
-- OBJEKT1 & OBJEKT2 --> Gegen wen richtet es sich?
-- FORM1 & FORM21 --> Aktionsform
-- SCHADEN --> Sachbeschädigung
-- FESTNAHM --> Wie viele Festnehmen
-- VERLETZT --> Verletzte?
-- VERLPROZ --> Verletzte Protestierende.
-- VERLPOL --> Verletzte Polizei
-- VERLGEG --> Verletzte Gegner
-- VERLDRIT --> Verletzte Unbeteiligte
-- TOTE --> Tote
-- TOTPRO -->
-- TOTPOL -->
-- TOTGEG -->
-- TOTDRIT -->
-- VSTATE --> Statements von Interessengruppen
-- VSTABE1 & VSTABE2 --> Bewertung
-- SSTATE --> Statements von politischadministrativer Seite
-- STATBE1 & STATBE2 --> Bewertung
+#- PEN --> Protestereignisnummer
+#- NCLAIM1--> Themenfeld 
+prodat$nclaim1
+#- BEWEG --> Bewegung
 
-```{r packagest, include=FALSE}
-library(foreign)
+#- BEWEG1 & BEWEG2 --> Welche Bewegung
+#- OBJEKT1 & OBJEKT2 --> Gegen wen richtet es sich?
+#- JAHRN --> Jahr
+#- MONATN --> Monat
+#- TAGN --> Tag
+#- ETAG --> Ereignistag (Wochentag)
+
+#- TINI --> Initiativen, Gruppen und Netzwerke 
+#- TINITX1 & TINITX2 --> Name 
+prodat$tinitx1
+#- TINICO1 & TINICO2 --> Codenummer
+prodat$tinico1
+#- TINIFU1 & TINIFU2 --> Veranstalter
+#- TVERB --> Gewerkschaften, Verbände, Kirchen
+#- TVERB1 & TVERB2 --> Name
+#- TVERBCO1 & TVERBCO2 --> Codenummer
+prodat$tverbco1
+#- KAM --> Ist PE Teil einer Kampagne?
+#- KAMCO --> Kampagnennummer
 ```
 
+```{r dependent variable, include=FALSE}
+#Dependent Variable: 
+#- New Variable which says which protests belongs together
+#- ZAHL --> Anzahl der Teilnehmer
+```
+```{r independent variables, echo=FALSE}
+#Independent Variables:
+
+#Evaluation interest group
+#- VSTATE --> Statements von Interessengruppen
+#- VSTABE1 & VSTABE2 --> Bewertung
+prodat$vstate
+prodat$vstabe1
+prodat$vstabe2
 
 
+nvstate <- na.omit(pro$vstate)
+nvstate
+```
 
+```{r independent variables, echo=FALSE}
+#Independent Variables:
 
+#Evaluation political side
+#- SSTATE --> Statements von politischadministrativer Seite
+#- STATBE1 & STATBE2 --> Bewertung
+prodat$sstate
+prodat$statbe1
 
+pro <-  select(prodat, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2)
+```
 
+```{r controll variables - Injuries, include=FALSE}
+#Injured during the Protest
+#- VERLETZT --> Verletzte?
+prodat$verletzt
 
+```
 
+```{r control variable - Deaths, include=FALSE}
+#Death during the Protest
+#- TOTE --> Tote im generellen
+prodat$tote
+```
+
+```{r control variables - Gegenproteste, include=FALSE}
+#Gegenproteste:
+#- AUSJA --> Gegenproteste
+#- AUSPEN --> Gegen wen Gegenproteste
+#- GEGJA --> Ist PE ein Gegenprotest?
+#- GEGENPEN --> Gegen wen?
+```
+
+```{r control variables - News Coverage, include=FALSE}
+#News Coverage
+#- ARTZAHL --> Artikelanzahl
+prodat$artzahl
+```
+
+```{r control variables - Day of week, include=FALSE}
+#Day of Protest
+#- ETAG --> Ereignistag (Wochentag)
+prodat$etag
+```
+
+```{r control variables - Activity, include=FALSE}
+#Aktionsform
+#- FORM1 & FORM21 --> Aktionsform
+prodat$form1
+prodat$form2
+```
+
+```{r control variables - Property damage, include=FALSE}
+#Sachbeschädigung
+#- SCHADEN --> Sachbeschädigung
+prodat$schaden
+```
+
+```{r control variables - Arrests, include=FALSE}
+#Festnahmen
+#- FESTNAHM --> Wie viele Festnehmen
+prodat$festnahm
+
+```
+
+```{r control variables - Area, include=FALSE}
+#Area
+#- ORT1 & ORT2c --> Hauptorte
+#- BRD1 & BRD2 --> West/Ost
+```
+
+```{r control variables - Area, include=FALSE}
+#Area
+#- ORT1 & ORT2c --> Hauptorte
+#- BRD1 & BRD2 --> West/Ost
+```
 
 
 
