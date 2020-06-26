@@ -24,23 +24,48 @@ prodat
 ```{r data set, echo=FALSE}
 #new data set with all the important variables
 
-pro <-  select(prodat, pen, nclaim1, nclaim2, jahrn, monatn, tagn, etag, tini, tinitx1, tinitx2, tinico1, tinico2, tinifu1, tinifu2, tverb, tverb1, tverb2, tverbco1, tverbco2, tverbfu1, tverbfu1, kam, kamco, tallzahl, nclaim1, nclaim2, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, tote, artzahl, etag, form1, form2, schaden, festnahm, ort1, ort2, brd1, brd2)
-
-pro$vstate
-prod <- na.omit(pro, cols=="vstate", invert=FALSE)
-prod
+p <-  select(prodat, pen, nclaim1, nclaim2, jahrn, monatn, tagn, etag, tini, tinitx1, tinitx2, tinico1, tinico2, tinifu1, tinifu2, tverb, tverb1, tverb2, tverbco1, tverbco2, tverbfu1, tverbfu1, kam, kamco, tallzahl, nclaim1, nclaim2, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, tote, artzahl, etag, form1, form2, schaden, festnahm, ort1, ort2, brd1, brd2, zahl)
 
 
-p <- select(prodat, vstate, tverbco1, tverbco2, tinico1, tinico2)
+
+#p <- select(prodat, vstate, tverbco1, tverbco2, tinico1, tinico2, vstabe1, vstabe2, sstate, statbe1, statbe2)
 p[p==""]<-NA
-p <- p %>% replace_na(list(tverbco1 = "not", tverbco2 = "not", tinico1 = "not", tinico2 = "not"))
-p <- na.omit(p, cols=="vstate")
+p$sstate <- as.integer(p$sstate)
+p$vstate <- as.integer(p$vstate)
+p <- p %>% replace_na(list(tverbco1 = "not", tverbco2 = "not", tinico1 = "not", tinico2 = "not", statbe1 = "not", statbe2 = "not", vstabe2 = "not", vstabe1 = "not", sstate = "not", vstate = "not", zahl = "not", verletzt = "not", tote = "not", artzahl = "not", etag = "not", festnahm = "not", schaden = "not", form1 = "not", form2 = "not"))
 p
 
-library(dplyr)
-df <- tibble(x = c(1, 2, NA), y = c("a", NA, "b"), z = list(1:5, NULL, 10:20))
-df %>% replace_na(list(x = 0, y = "unknown"))
-df %>% mutate(x = replace_na(x, 0))
+
+p <- p %>% mutate(bewert = coalesce(vstate, sstate)) %>%
+           mutate(codeverb = coalesce(tverbco1, tverbco2)) %>%
+           mutate(codeini = coalesce(tinico1, tinico2)) %>%
+           mutate(bewertint = coalesce(vstabe1, vstabe2)) %>%
+           mutate(bewertpol = coalesce(statbe1, statbe2)) %>%
+           mutate(form = coalesce(form1, form2)) %>%
+         select(bewert, codeini, codeverb, bewertint, bewertpol, zahl, verletzt, tote, artzahl, etag, festnahm, schaden, form)
+
+
+
+p[p=="not"]<-NA
+p
+p$codeini <- as.integer(p$codeini)
+p$codeverb <- as.integer(p$codeverb)
+p$bewertint <- as.integer(p$bewertint)
+p$bewertpol <- as.integer(p$bewertpol)
+p$zahl <- as.integer(p$zahl)
+p$verletzt <- as.integer(p$verletzt)
+p$tote <- as.integer(p$tote)
+p$artzahl <- as.integer(p$artzahl)
+p$festnahm <- as.integer(p$festnahm)
+p$schaden <- as.integer(p$schaden)
+p$form<- as.integer(p$form)
+p <- p %>% replace_na(list(codeini = "not", codeverb = "not", bewertint = "not", bewertpol = "not", verletzt = "not", tote = "not", artzahl = "not", etag = "not", festnahm = "not", schaden = "not", form1 = "not", form2 = "not"))
+p <- na.omit(p, cols=="vstate")
+p <- na.omit(p, cols=="zahl")
+
+p[p=="not"]<-NA
+p
+
 ```
 
 ```{r Creation of new Variable, include=FALSE}
@@ -48,26 +73,20 @@ df %>% mutate(x = replace_na(x, 0))
 
 #- PEN --> Protestereignisnummer
 #- NCLAIM1--> Themenfeld 
-prodat$nclaim1
 #- BEWEG --> Bewegung
-
 #- BEWEG1 & BEWEG2 --> Welche Bewegung
 #- OBJEKT1 & OBJEKT2 --> Gegen wen richtet es sich?
 #- JAHRN --> Jahr
 #- MONATN --> Monat
 #- TAGN --> Tag
 #- ETAG --> Ereignistag (Wochentag)
-
 #- TINI --> Initiativen, Gruppen und Netzwerke 
 #- TINITX1 & TINITX2 --> Name 
-prodat$tinitx1
 #- TINICO1 & TINICO2 --> Codenummer
-prodat$tinico1
 #- TINIFU1 & TINIFU2 --> Veranstalter
 #- TVERB --> Gewerkschaften, Verbände, Kirchen
 #- TVERB1 & TVERB2 --> Name
 #- TVERBCO1 & TVERBCO2 --> Codenummer
-prodat$tverbco1
 #- KAM --> Ist PE Teil einer Kampagne?
 #- KAMCO --> Kampagnennummer
 ```
@@ -83,13 +102,6 @@ prodat$tverbco1
 #Evaluation interest group
 #- VSTATE --> Statements von Interessengruppen
 #- VSTABE1 & VSTABE2 --> Bewertung
-prodat$vstate
-prodat$vstabe1
-prodat$vstabe2
-
-
-nvstate <- na.omit(pro$vstate)
-nvstate
 ```
 
 ```{r independent variables, echo=FALSE}
@@ -98,23 +110,17 @@ nvstate
 #Evaluation political side
 #- SSTATE --> Statements von politischadministrativer Seite
 #- STATBE1 & STATBE2 --> Bewertung
-prodat$sstate
-prodat$statbe1
-
-pro <-  select(prodat, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2)
 ```
 
 ```{r controll variables - Injuries, include=FALSE}
 #Injured during the Protest
 #- VERLETZT --> Verletzte?
-prodat$verletzt
 
 ```
 
 ```{r control variable - Deaths, include=FALSE}
 #Death during the Protest
 #- TOTE --> Tote im generellen
-prodat$tote
 ```
 
 ```{r control variables - Gegenproteste, include=FALSE}
@@ -128,13 +134,11 @@ prodat$tote
 ```{r control variables - News Coverage, include=FALSE}
 #News Coverage
 #- ARTZAHL --> Artikelanzahl
-prodat$artzahl
 ```
 
 ```{r control variables - Day of week, include=FALSE}
 #Day of Protest
 #- ETAG --> Ereignistag (Wochentag)
-prodat$etag
 ```
 
 ```{r control variables - Activity, include=FALSE}
@@ -163,11 +167,7 @@ prodat$festnahm
 #- BRD1 & BRD2 --> West/Ost
 ```
 
-```{r control variables - Area, include=FALSE}
-#Area
-#- ORT1 & ORT2c --> Hauptorte
-#- BRD1 & BRD2 --> West/Ost
-```
+
 
 
 
