@@ -21,52 +21,7 @@ prodat <- read.dta("/Users/sophiehensgen/Webscraping-LS-Methode/Protets/prodat_1
 prodat
 
 ```
-```{r data set, echo=FALSE}
-#new data set with all the important variables
 
-p <-  select(prodat, pen, nclaim1, nclaim2, jahrn, monatn, tagn, etag, tini, tinitx1, tinitx2, tinico1, tinico2, tinifu1, tinifu2, tverb, tverb1, tverb2, tverbco1, tverbco2, tverbfu1, tverbfu1, kam, kamco, tallzahl, nclaim1, nclaim2, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, tote, artzahl, etag, form1, form2, schaden, festnahm, ort1, ort2, brd1, brd2, zahl)
-
-
-
-#p <- select(prodat, vstate, tverbco1, tverbco2, tinico1, tinico2, vstabe1, vstabe2, sstate, statbe1, statbe2)
-p[p==""]<-NA
-p$sstate <- as.integer(p$sstate)
-p$vstate <- as.integer(p$vstate)
-p <- p %>% replace_na(list(tverbco1 = "not", tverbco2 = "not", tinico1 = "not", tinico2 = "not", statbe1 = "not", statbe2 = "not", vstabe2 = "not", vstabe1 = "not", sstate = "not", vstate = "not", zahl = "not", verletzt = "not", tote = "not", artzahl = "not", etag = "not", festnahm = "not", schaden = "not", form1 = "not", form2 = "not"))
-p
-
-
-p <- p %>% mutate(bewert = coalesce(vstate, sstate)) %>%
-           mutate(codeverb = coalesce(tverbco1, tverbco2)) %>%
-           mutate(codeini = coalesce(tinico1, tinico2)) %>%
-           mutate(bewertint = coalesce(vstabe1, vstabe2)) %>%
-           mutate(bewertpol = coalesce(statbe1, statbe2)) %>%
-           mutate(form = coalesce(form1, form2)) %>%
-         select(bewert, codeini, codeverb, bewertint, bewertpol, zahl, verletzt, tote, artzahl, etag, festnahm, schaden, form)
-
-
-
-p[p=="not"]<-NA
-p
-p$codeini <- as.integer(p$codeini)
-p$codeverb <- as.integer(p$codeverb)
-p$bewertint <- as.integer(p$bewertint)
-p$bewertpol <- as.integer(p$bewertpol)
-p$zahl <- as.integer(p$zahl)
-p$verletzt <- as.integer(p$verletzt)
-p$tote <- as.integer(p$tote)
-p$artzahl <- as.integer(p$artzahl)
-p$festnahm <- as.integer(p$festnahm)
-p$schaden <- as.integer(p$schaden)
-p$form<- as.integer(p$form)
-p <- p %>% replace_na(list(codeini = "not", codeverb = "not", bewertint = "not", bewertpol = "not", verletzt = "not", tote = "not", artzahl = "not", etag = "not", festnahm = "not", schaden = "not", form1 = "not", form2 = "not"))
-p <- na.omit(p, cols=="vstate")
-p <- na.omit(p, cols=="zahl")
-
-p[p=="not"]<-NA
-p
-
-```
 
 ```{r Creation of new Variable, include=FALSE}
 #Variables I will use to find out which protest belong together
@@ -144,21 +99,16 @@ p
 ```{r control variables - Activity, include=FALSE}
 #Aktionsform
 #- FORM1 & FORM21 --> Aktionsform
-prodat$form1
-prodat$form2
 ```
 
 ```{r control variables - Property damage, include=FALSE}
 #Sachbeschädigung
 #- SCHADEN --> Sachbeschädigung
-prodat$schaden
 ```
 
 ```{r control variables - Arrests, include=FALSE}
 #Festnahmen
 #- FESTNAHM --> Wie viele Festnehmen
-prodat$festnahm
-
 ```
 
 ```{r control variables - Area, include=FALSE}
@@ -166,6 +116,131 @@ prodat$festnahm
 #- ORT1 & ORT2c --> Hauptorte
 #- BRD1 & BRD2 --> West/Ost
 ```
+
+```{r data set, echo=FALSE}
+#new data set with all the important variables
+
+p <-  select(prodat, pen, nclaim1, nclaim2, jahrn, monatn, tagn, etag, tini, tinitx1, tinitx2, tinico1, tinico2, tinifu1, tinifu2, tverb, tverb1, tverb2, tverbco1, tverbco2, tverbfu1, tverbfu1, kam, kamco, tallzahl, nclaim1, nclaim2, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, tote, artzahl, etag, form1, form2, schaden, festnahm, ort1, ort2, brd1, brd2, zahl, formtx)
+
+
+
+#p <- select(prodat, vstate, tverbco1, tverbco2, tinico1, tinico2, vstabe1, vstabe2, sstate, statbe1, statbe2)
+p[p==""]<-NA
+p$sstate <- as.integer(p$sstate)
+p$vstate <- as.integer(p$vstate)
+p <- p %>% replace_na(list(tverbco1 = "not", tverbco2 = "not", tinico1 = "not", tinico2 = "not", statbe1 = "not", statbe2 = "not", vstabe2 = "not", vstabe1 = "not", sstate = "not", vstate = "not", zahl = "not", verletzt = "not", artzahl = "not", etag = "not", festnahm = "not", schaden = "not", form1 = "not", form2 = "not", formtx = "not"))
+p
+
+
+p <- p %>% mutate(bewert = coalesce(vstate, sstate)) %>%
+           mutate(codeverb = coalesce(tverbco1, tverbco2)) %>%
+           mutate(codeini = coalesce(tinico1, tinico2)) %>%
+           mutate(bewertint = coalesce(vstabe1, vstabe2)) %>%
+           mutate(bewertpol = coalesce(statbe1, statbe2)) %>%
+           mutate(form = coalesce(form1, form2)) %>%
+         select(bewert, codeini, codeverb, bewertint, bewertpol, zahl, verletzt, artzahl, etag, festnahm, schaden, form, formtx)
+
+
+
+p[p=="not"]<-NA
+p
+p$codeini <- as.integer(p$codeini)
+p$codeverb <- as.integer(p$codeverb)
+p$bewertint <- as.integer(p$bewertint)
+p$bewertpol <- as.integer(p$bewertpol)
+p$zahl <- as.integer(p$zahl)
+p$verletzt <- as.integer(p$verletzt)
+p$artzahl <- as.integer(p$artzahl)
+p$festnahm <- as.integer(p$festnahm)
+p$schaden <- as.integer(p$schaden)
+p$form<- as.integer(p$form)
+p <- p %>% replace_na(list(codeini = "not", codeverb = "not", bewertint = "not", bewertpol = "not", verletzt = "not", artzahl = "not", etag = "not", festnahm = "not", schaden = "not", form1 = "not", form2 = "not", formtx = "not"))
+p <- na.omit(p, cols=="vstate")
+p <- na.omit(p, cols=="zahl")
+
+p[p=="not"]<-NA
+p
+
+```
+
+
+```{r var aufbereitung - Area, echo=FALSE}
+
+# wenn verletzt 1, wenn nicht 0
+p$verletzt <- gsub("1", "0", p$verletzt, fixed = TRUE)
+p$verletzt <- gsub("2", "1", p$verletzt, fixed = TRUE)
+p$verletzt <- gsub("3", NA, p$verletzt , fixed = TRUE)
+
+# wenn festnahme geschehen 1, wenn nicht 0
+p$festnahm <- gsub("2", "0", p$festnahm, fixed = TRUE)
+p$festnahm <- gsub("3", NA, p$festnahm, fixed = TRUE)
+
+# wenn Sachschaden geschehen 1, wenn nicht 0
+p$schaden <- gsub("2", "0", p$schaden, fixed = TRUE)
+p$schaden  <- gsub("3", NA, p$schaden, fixed = TRUE)
+
+# Wochentage von 1-7
+p$etag <- gsub("montag", "1", p$etag, fixed = TRUE)
+p$etag <- gsub("dienstag", "2", p$etag, fixed = TRUE)
+p$etag <- gsub("mittwoch", "3", p$etag, fixed = TRUE)
+p$etag <- gsub("donnerstag", "4", p$etag, fixed = TRUE)
+p$etag <- gsub("freitag", "5", p$etag, fixed = TRUE)
+p$etag <- gsub("samstag", "6", p$etag, fixed = TRUE)
+p$etag <- gsub("sonntag", "7", p$etag, fixed = TRUE)
+
+# Form der Protest (active 1, non active 2, crimes 3)
+p$form <- gsub("1", "2", p$form, fixed = TRUE)
+p$form <- gsub("3", "2", p$form, fixed = TRUE)
+p$form <- gsub("8", "2", p$form, fixed = TRUE)
+p$form <- gsub("10", "2", p$form, fixed = TRUE)
+p$form <- gsub("11", "2", p$form, fixed = TRUE)
+p$form <- gsub("12", "2", p$form, fixed = TRUE)
+p$form <- gsub("22", "2", p$form, fixed = TRUE)
+
+p$form <- gsub("4", "1", p$form, fixed = TRUE)
+p$form <- gsub("5", "1", p$form, fixed = TRUE)
+p$form <- gsub("6", "1", p$form, fixed = TRUE)
+p$form <- gsub("12", "1", p$form, fixed = TRUE)
+p$form <- gsub("13", "1", p$form, fixed = TRUE)
+p$form <- gsub("14", "1", p$form, fixed = TRUE)
+p$form <- gsub("15", "1", p$form, fixed = TRUE)
+p$form <- gsub("7", "1", p$form, fixed = TRUE)
+p$form <- gsub("98", "1", p$form, fixed = TRUE)
+
+p$form <- gsub("16", "3", p$form, fixed = TRUE)
+p$form <- gsub("17", "3", p$form, fixed = TRUE)
+p$form <- gsub("18", "3", p$form, fixed = TRUE)
+p$form <- gsub("19", "3", p$form, fixed = TRUE)
+p$form <- gsub("20", "3", p$form, fixed = TRUE)
+p$form <- gsub("21", "3", p$form, fixed = TRUE)
+p$form <- gsub("29", "3", p$form, fixed = TRUE)
+
+p
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
