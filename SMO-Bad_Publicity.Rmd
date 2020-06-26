@@ -14,12 +14,12 @@ library(foreign)
 library(dplyr)
 library(ggplot2)
 library(tidyr)
+library(anytime)
 ```
 
 ```{r data set, echo=FALSE}
 prodat <- read.dta("/Users/sophiehensgen/Webscraping-LS-Methode/Protets/prodat_1950-2002_OG.dta")
 prodat
-
 ```
 
 
@@ -120,11 +120,26 @@ prodat
 ```{r data set, echo=FALSE}
 #new data set with all the important variables
 
-p <-  select(prodat, pen, nclaim1, nclaim2, jahrn, monatn, tagn, etag, tini, tinitx1, tinitx2, tinico1, tinico2, tinifu1, tinifu2, tverb, tverb1, tverb2, tverbco1, tverbco2, tverbfu1, tverbfu1, kam, kamco, tallzahl, nclaim1, nclaim2, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, tote, artzahl, etag, form1, form2, schaden, festnahm, ort1, ort2, brd1, brd2, zahl, formtx)
+pro <-  select(prodat, pen, nclaim1, nclaim2, jahrn, monatn, tagn, etag, tini, tinitx1, tinitx2, tinico1, tinico2, tinifu1, tinifu2, tverb, tverb1, tverb2, tverbco1, tverbco2, tverbfu1, tverbfu2, kam, kamco, tallzahl, nclaim1, nclaim2, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, tote, artzahl, etag, form1, form2, schaden, festnahm, ort1, ort2, brd1, brd2, zahl, formtx)
 
+p <- select(pro, jahrn, monatn, tagn, etag, tinico1, tinico2, tinifu1, tinifu2, tverbco1, tverbco2, tverbfu1, tverbfu2, tallzahl, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, artzahl, etag, form1, form2, schaden, festnahm, zahl, formtx)
 
+p$etag <- as.character(p$etag)
+p$tinifu1 <- as.character(p$tinifu1)
+p$tinifu2 <- as.character(p$tinifu2)
+p$tverbfu1 <- as.character(p$tverbfu1)
+p$tverbfu2 <- as.character(p$tverbfu2)
+#p$verletzt <- as.character(p$verletzt)
+p$form2 <- as.character(p$form2)
+#p$schaden <- as.character(p$schaden)
+#p$festnahm <- as.character(p$festnahm)
 
-#p <- select(prodat, vstate, tverbco1, tverbco2, tinico1, tinico2, vstabe1, vstabe2, sstate, statbe1, statbe2)
+p$sstate <- as.integer(p$sstate)
+p$vstate <- as.integer(p$vstate)
+p$festnahm <- as.integer(p$festnahm)
+p$schaden <- as.integer(p$schaden)
+p$verletzt <- as.integer(p$verletzt)
+
 p[p==""]<-NA
 p$sstate <- as.integer(p$sstate)
 p$vstate <- as.integer(p$vstate)
@@ -132,37 +147,59 @@ p <- p %>% replace_na(list(tverbco1 = "not", tverbco2 = "not", tinico1 = "not", 
 p
 
 
-p <- p %>% mutate(bewert = coalesce(vstate, sstate)) %>%
-           mutate(codeverb = coalesce(tverbco1, tverbco2)) %>%
-           mutate(codeini = coalesce(tinico1, tinico2)) %>%
-           mutate(bewertint = coalesce(vstabe1, vstabe2)) %>%
-           mutate(bewertpol = coalesce(statbe1, statbe2)) %>%
+p <- p %>% mutate(i_bewert = coalesce(vstate, sstate)) %>%
+           mutate(i_codeverb = coalesce(tverbco1, tverbco2)) %>%
+           mutate(i_codeini = coalesce(tinico1, tinico2)) %>%
+           mutate(i_bewertint = coalesce(vstabe1, vstabe2)) %>%
+           mutate(i_bewertpol = coalesce(statbe1, statbe2)) %>%
            mutate(form = coalesce(form1, form2)) %>%
-         select(bewert, codeini, codeverb, bewertint, bewertpol, zahl, verletzt, artzahl, etag, festnahm, schaden, form, formtx)
+         select(i_bewert, i_codeini, i_codeverb, i_bewertint, i_bewertpol, zahl, verletzt, artzahl, etag, festnahm, schaden, form, formtx, jahrn, monatn, tagn)
 
 
 
 p[p=="not"]<-NA
 p
-p$codeini <- as.integer(p$codeini)
-p$codeverb <- as.integer(p$codeverb)
-p$bewertint <- as.integer(p$bewertint)
-p$bewertpol <- as.integer(p$bewertpol)
+p$i_codeini <- as.integer(p$i_codeini)
+p$i_codeverb <- as.integer(p$i_codeverb)
+p$i_bewertint <- as.integer(p$i_bewertint)
+p$i_bewertpol <- as.integer(p$i_bewertpol)
 p$zahl <- as.integer(p$zahl)
-p$verletzt <- as.integer(p$verletzt)
 p$artzahl <- as.integer(p$artzahl)
-p$festnahm <- as.integer(p$festnahm)
-p$schaden <- as.integer(p$schaden)
 p$form<- as.integer(p$form)
-p <- p %>% replace_na(list(codeini = "not", codeverb = "not", bewertint = "not", bewertpol = "not", verletzt = "not", artzahl = "not", etag = "not", festnahm = "not", schaden = "not", form1 = "not", form2 = "not", formtx = "not"))
-p <- na.omit(p, cols=="vstate")
+p <- p %>% replace_na(list(i_codeini = "not", i_codeverb = "not", i_bewertint = "not", i_bewertpol = "not", verletzt = "not", artzahl = "not", etag = "not", festnahm = "not", schaden = "not", form = "not", formtx = "not"))
+p <- na.omit(p, cols=="i_bewert")
 p <- na.omit(p, cols=="zahl")
 
 p[p=="not"]<-NA
 p
-
 ```
 
+```{r data set, echo=FALSE}
+
+# create a date variable
+p <- unite(p, date, tagn, monatn, jahrn, sep = "-")
+
+p$date <-  format(as.Date(p$date, "%d-%m-%y"), "19%y-%m-%d")
+
+
+p$date <- gsub("1902", "2002", p$date)
+p$date <- gsub("1901", "2001", p$date)
+p$date <- gsub("1900", "2000", p$date)
+
+p$date <- as.Date(p$date, "%Y-%m-%d")
+```
+
+```{r data set, echo=FALSE}
+# Correct the order of the variables
+
+p <-  arrange(p, date)
+
+p <- p[, c("i_bewert", "date", "i_codeini", "i_codeverb", "i_bewertint", "i_bewertpol", "zahl", "artzahl", "verletzt", "schaden", "festnahm", "form", "formtx", "etag")] 
+
+p <-  arrange(p, i_codeverb)
+
+
+```
 
 ```{r var aufbereitung - Area, echo=FALSE}
 
@@ -218,8 +255,48 @@ p$form <- gsub("29", "3", p$form, fixed = TRUE)
 p
 ```
 
+```{r var aufbereitung - Area, echo=FALSE}
+p %>% 
+  rename(
+    i_zahl = zahl,
+    x_verletzt = verletzt,
+    x_etag = etag,
+    x_artzahl = artzahl,
+    x_festnahm = festnahm,
+    x_schaden=schaden,
+    x_form = form
+    )
+```
+
+```{r  , echo=FALSE}
+ 
+ # n_distinct(p$i_codeverb)
+
+#iris %>% 
+ # group_by(i_codeverb) %>% 
+  #mutate(diff)
+ #                                     
+  #select(date, i_codeverb, zahl)%>%
+  #mutate(iris, sepal )
+   
+  
+ d <-  p %>%
+    select(date, i_codeverb) %>%
+    spread(date)
+
+```
 
 
+```{r kick out every observation that did not appear at least twice in our data set, echo=FALSE}
+p <-  arrange(p, i_codeverb, date)
+
+p[p$i_codeverb %in% names(which(table(p$i_codeverb) == 1)), ]
+p[p$i_codeverb %in% names(which(table(p$i_codeverb) >1)), ]
+p <-  arrange(p, i_codeini, date)
+
+p[p$i_codeini %in% names(which(table(p$i_codeini) > 1)), ]
+
+```
 
 
 
