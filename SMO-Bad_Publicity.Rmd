@@ -15,6 +15,8 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(anytime)
+library(writexl)
+library(readxl)
 ```
 
 ```{r data set, echo=FALSE}
@@ -122,7 +124,7 @@ prodat
 
 pro <-  select(prodat, pen, nclaim1, nclaim2, jahrn, monatn, tagn, etag, tini, tinitx1, tinitx2, tinico1, tinico2, tinifu1, tinifu2, tverb, tverb1, tverb2, tverbco1, tverbco2, tverbfu1, tverbfu2, kam, kamco, tallzahl, nclaim1, nclaim2, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, tote, artzahl, etag, form1, form2, schaden, festnahm, ort1, ort2, brd1, brd2, zahl, formtx)
 
-p <- select(pro, jahrn, monatn, tagn, etag, tinico1, tinico2, tinifu1, tinifu2, tverbco1, tverbco2, tverbfu1, tverbfu2, tallzahl, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, artzahl, etag, form1, form2, schaden, festnahm, zahl, formtx)
+p <- select(pro, jahrn, monatn, tagn, etag, tinico1, tinico2, tinifu1, tinifu2, tverbco1, tverbco2, tverbfu1, tverbfu2, tallzahl, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, artzahl, etag, form1, form2, schaden, festnahm, zahl, formtx, ort1)
 
 p$etag <- as.character(p$etag)
 p$tinifu1 <- as.character(p$tinifu1)
@@ -143,7 +145,7 @@ p$verletzt <- as.integer(p$verletzt)
 p[p==""]<-NA
 p$sstate <- as.integer(p$sstate)
 p$vstate <- as.integer(p$vstate)
-p <- p %>% replace_na(list(tverbco1 = "not", tverbco2 = "not", tinico1 = "not", tinico2 = "not", statbe1 = "not", statbe2 = "not", vstabe2 = "not", vstabe1 = "not", sstate = "not", vstate = "not", zahl = "not", verletzt = "not", artzahl = "not", etag = "not", festnahm = "not", schaden = "not", form1 = "not", form2 = "not", formtx = "not"))
+p <- p %>% replace_na(list(tverbco1 = "not", tverbco2 = "not", tinico1 = "not", tinico2 = "not", statbe1 = "not", statbe2 = "not", vstabe2 = "not", vstabe1 = "not", sstate = "not", vstate = "not", zahl = "not", verletzt = "not", artzahl = "not", etag = "not", festnahm = "not", schaden = "not", form1 = "not", form2 = "not", formtx = "not", ort1 = "not"))
 p
 
 
@@ -153,7 +155,7 @@ p <- p %>% mutate(i_bewert = coalesce(vstate, sstate)) %>%
            mutate(i_bewertint = coalesce(vstabe1, vstabe2)) %>%
            mutate(i_bewertpol = coalesce(statbe1, statbe2)) %>%
            mutate(form = coalesce(form1, form2)) %>%
-         select(i_bewert, i_codeini, i_codeverb, i_bewertint, i_bewertpol, zahl, verletzt, artzahl, etag, festnahm, schaden, form, formtx, jahrn, monatn, tagn)
+         select(i_bewert, i_codeini, i_codeverb, i_bewertint, i_bewertpol, zahl, verletzt, artzahl, etag, festnahm, schaden, form, formtx, jahrn, monatn, tagn, ort1)
 
 
 
@@ -166,7 +168,7 @@ p$i_bewertpol <- as.integer(p$i_bewertpol)
 p$zahl <- as.integer(p$zahl)
 p$artzahl <- as.integer(p$artzahl)
 p$form<- as.integer(p$form)
-p <- p %>% replace_na(list(i_codeini = "not", i_codeverb = "not", i_bewertint = "not", i_bewertpol = "not", verletzt = "not", artzahl = "not", etag = "not", festnahm = "not", schaden = "not", form = "not", formtx = "not"))
+p <- p %>% replace_na(list(i_codeini = "not", i_codeverb = "not", i_bewertint = "not", i_bewertpol = "not", verletzt = "not", artzahl = "not", etag = "not", festnahm = "not", schaden = "not", form = "not", formtx = "not", ort1 = "not"))
 p <- na.omit(p, cols=="i_bewert")
 p <- na.omit(p, cols=="zahl")
 
@@ -194,7 +196,7 @@ p$date <- as.Date(p$date, "%Y-%m-%d")
 
 p <-  arrange(p, date)
 
-p <- p[, c("i_bewert", "date", "i_codeini", "i_codeverb", "i_bewertint", "i_bewertpol", "zahl", "artzahl", "verletzt", "schaden", "festnahm", "form", "formtx", "etag")] 
+p <- p[, c("i_bewert", "date", "i_codeini", "i_codeverb", "ort1", "i_bewertint", "i_bewertpol", "zahl", "artzahl", "verletzt", "schaden", "festnahm", "form", "formtx", "etag")] 
 
 p <-  arrange(p, i_codeverb)
 
@@ -264,12 +266,21 @@ p %>%
     x_artzahl = artzahl,
     x_festnahm = festnahm,
     x_schaden=schaden,
-    x_form = form
+    x_form = form,
+    z_ort = ort1
     )
+
+p <-  arrange(p, i_codeverb, date)
+p
 ```
 
 ```{r  , echo=FALSE}
  
+p <-  arrange(p, i_codeverb, date)
+write_xlsx(p,"/Users/sophiehensgen/Webscraping-LS-Methode/Protets/prodat-ready-for-edit.xlsx")
+
+p <-  arrange(p, i_codeini, date)
+write_xlsx(p,"/Users/sophiehensgen/Webscraping-LS-Methode/Protets/prodat-ready-for-edit-2.xlsx")
  # n_distinct(p$i_codeverb)
 
 #iris %>% 
@@ -292,23 +303,103 @@ p <-  arrange(p, i_codeverb, date)
 
 p[p$i_codeverb %in% names(which(table(p$i_codeverb) == 1)), ]
 p[p$i_codeverb %in% names(which(table(p$i_codeverb) >1)), ]
+
 p <-  arrange(p, i_codeini, date)
 
 p[p$i_codeini %in% names(which(table(p$i_codeini) > 1)), ]
 
 ```
 
+```{r load data set, echo=FALSE}
+
+pverb <- read_excel("prodat-verband-full.xlsx")
+pverb
+
+pini <- read_excel("prodat-initiative-full.xlsx")
+pini
+
+pverbc <- read_excel("prodat-verband-full-change.xlsx")
+pverbc
+
+```
+
+```{r subset & , echo=FALSE}
+q <- subset(pverbc, diff >= 1)
+
+lapply(q[, c("diff", "i_bewertint")], table)
+
+w <- subset(pini, diff >= 1)
+
+lapply(w[, c("diff", "i_bewertint")], table)
+```
+
+```{r x tabs of main iv, echo=FALSE}
+
+ftable(xtabs(~ diff + i_bewertint, data = q))
+ftable(xtabs(~ diff + i_bewertpol, data = q))
+
+ftable(xtabs(~ diff + i_bewertint, data = w))
+ftable(xtabs(~ diff + i_bewertpol, data = w))
+```
+
+```{r summary of iv, echo=FALSE}
+
+summary(q$i_bewertint)
+summary(q$i_bewertpol)
+
+summary(w$i_bewertint)
+summary(w$i_bewertpol)
+```
+
+```{r standard deviation, echo=FALSE}
+sd(q$i_bewertint)
+sd(q$i_bewertpol)
+
+sd(w$i_bewertint)
+sd(w$i_bewertpol)
+```
+
+```{r distribution, echo=FALSE}
+
+#subset prior so you dont have any nas in it
+c <- q %>% 
+  select(diff, i_bewertint, schaden, verletzt)%>%
+  na.omit(schaden, verletzt)
+
+v <- w %>% 
+  select(diff, i_bewertint, schaden, verletzt)%>%
+  na.omit(schaden, verletzt)
+
+```
+
+```{r distribution, echo=FALSE}
+
+ggplot(c, aes(x = diff, y = i_bewertint, group = schaden)) +
+  geom_boxplot(size = .75) +
+  geom_jitter(alpha = .5) +
+  facet_grid(schaden ~ verletzt, margins = TRUE) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+
+
+ggplot(v, aes(x = diff, y = i_bewertint, group = schaden)) +
+  geom_boxplot(size = .75) +
+  geom_jitter(alpha = .5) +
+  facet_grid(schaden ~ verletzt, margins = TRUE) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
 
 
 
 
+```{r ordered logistic regression, echo=FALSE}
 
+## fit ordered logit model and store results 'm'
+m <- polr(apply ~ pared + public + gpa, data = dat, Hess=TRUE)
 
+## view a summary of the model
+summary(m)
 
-
-
-
-
+```
 
 
 
