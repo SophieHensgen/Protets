@@ -18,6 +18,9 @@ library(anytime)
 library(writexl)
 library(readxl)
 library(MASS)
+library(erer)
+library(stargazer)
+library(reshape2)
 ```
 
 ```{r data set, echo=FALSE}
@@ -351,8 +354,6 @@ e <- q %>%
 ftable(xtabs(~ diff + i_bewertint, data = c)) # kicking out c_no change as it has only two observations
 ftable(xtabs(~ diff + i_bewertpol, data = e))
 
-#ftable(xtabs(~ diff + i_bewertint, data = w)) --> not going to use the data set pini as it has not enough observations
-#ftable(xtabs(~ diff + i_bewertpol, data = w))
 ```
 
 ```{r summary of iv, echo=FALSE}
@@ -360,16 +361,12 @@ ftable(xtabs(~ diff + i_bewertpol, data = e))
 summary(c$i_bewertint)
 summary(e$i_bewertpol)
 
-#summary(w$i_bewertint)
-#summary(w$i_bewertpol)
 ```
 
 ```{r standard deviation, echo=FALSE}
 sd(c$i_bewertint)
 sd(e$i_bewertpol)
 
-#sd(w$i_bewertint)
-#sd(w$i_bewertpol)
 ```
 
 
@@ -403,12 +400,45 @@ e$diff <- as.factor(e$diff)
 ## Evaluation interest group
 ## fit ordered logit model and store results 'm'
 m <- polr(diff ~ i_bewertint, data = c, Hess=TRUE)
-mp <- polr(diff ~ i_bewertint, data = c, Hess=TRUE, method = "probit")
 
+## fit ordered logit model and store results 'mm' plus control variables
+mm <- polr(diff ~ i_bewertint + verletzt + schaden + festnahm + stand, data = c, Hess=TRUE)
 
-## predicted probabilities
+## view a summary of the model
+summary(m)
+summary(mm)
+
+```
+
+```{r Getting coefficients and p-values - pverbc, echo=FALSE}
+
+# Getting coefficients and p-values
+m.coef <- data.frame(coef(summary(m)))
+m.coef$pval <- round((pnorm(abs(m.coef$t.value), lower.tail = FALSE) * 2),2)
+
+# table for latex
+stargazer(m, type="html", out="m.htm")
+
+```
+
+```{r relative risk ratios - pverbc, echo=FALSE}
+
+# Relative risk ratios allow an easier interpretation of the logit coefficients. They are the exponentiated value of the logit coefficients.
+
+m.or=exp(coef(m)) 
+m.or
+
+stargazer(m, type="html", coef=list(m.or), p.auto=FALSE, out="m1or.htm")
+
+```
+
+```{r predicted probabilities- pverbc, echo=FALSE}
+
+# Use "probs" for predicted probabilities
 m.pred <- predict(mm, type="probs")
 summary(m.pred)
+
+## Use "probs" for predicted probabilities given specific predictors
 
 setup1 <- data.frame(verletzt = rep(mean(c$verletzt),3),
                      schaden = rep(mean(c$schaden),3),
@@ -422,19 +452,35 @@ setupprob <- predict(mm, newdata=setup1, type="probs")
 setup <- cbind(setup1, setupprob)
 setup
 
-## fit ordered logit model and store results 'mm' plus control variables
-mm <- polr(diff ~ i_bewertint + verletzt + schaden + festnahm + stand, data = c, Hess=TRUE)
+# marginal effects
+x <- ocME(mm)
+x
+x$out
 
-## view a summary of the model
-summary(m)
-summary(mm)
+
+```
+
+```{r plot versuch - pverbc, echo=FALSE}
+
+lnewdat <- melt(setup, id.vars = c("i_bewertint", "verletzt", "schaden", "festnahm", "stand"),
+  variable.name = "Level", value.name="Probability")
+## view first few rows
+head(lnewdat)
+
+ggplot(lnewdat, aes(x = i_bewertint, y = Probability, colour = Level)) +
+  geom_line() #+ facet_grid(schaden ~ verletzt, labeller="label_both")
+```
+
+##################################################################################################
+##################################################################################################
+
+```{r ordered logistic regression - pverbc, echo=FALSE}
 
 ## evaluation political side
-
 ## fit ordered logit model and store results 'n'
 n <- polr(diff ~ i_bewertpol, data = e, Hess=TRUE, method = "logistic")
 
-## fit ordered logit model and store results 'nn'
+## fit ordered logit model and store results 'nn' plus control variables
 nn <- polr(diff ~ i_bewertpol + verletzt + schaden + festnahm + etag + stand, data = e, Hess=TRUE)
 
 ## view a summary of the model
@@ -443,29 +489,51 @@ summary(nn)
 
 ```
 
+```{r Getting coefficients and p-values - pverbc, echo=FALSE}
+
+# Getting coefficients and p-values
+n.coef <- data.frame(coef(summary(n)))
+n.coef$pval <- round((pnorm(abs(n.coef$t.value), lower.tail = FALSE) * 2),2)
+
+# table for latex
+stargazer(n, type="html", out="m.htm")
+
+```
+
+```{r relative risk ratios - pverbc, echo=FALSE}
+
+# Relative risk ratios allow an easier interpretation of the logit coefficients. They are the exponentiated value of the logit coefficients.
+
+m.or=exp(coef(n)) 
+m.or
+
+stargazer(n, type="html", coef=list(n.or), p.auto=FALSE, out="m1or.htm")
+
+```
+
 ```{r p value - pverbc & i_bewertini, echo=FALSE}
 # simple regression
 ## store table
-cmtable <- coef(summary(m))
+cntable <- coef(summary(n))
 
 ## calculate and store p values
-pvm <- pnorm(abs(cmtable[, "t value"]), lower.tail = FALSE) * 2
+pvn <- pnorm(abs(cntable[, "t value"]), lower.tail = FALSE) * 2
 
 ## combined table
-cmtable <- cbind(cmtable, "p value" = pvm)
-cmtable
+cntable <- cbind(cntable, "p value" = pvn)
+cntable
 
 ##############################################################
 # multiple regression
 ## store table
-cmmtable <- coef(summary(mm))
+cnntable <- coef(summary(nn))
 
 ## calculate and store p values
-pvmm <- pnorm(abs(cmmtable[, "t value"]), lower.tail = FALSE) * 2
+pvnn <- pnorm(abs(cnntable[, "t value"]), lower.tail = FALSE) * 2
 
 ## combined table
-cmmtable <- cbind(cmmtable, "p value" = pvmm)
-cmmtable
+cnntable <- cbind(cnntable, "p value" = pvnn)
+cnntable
 
 ```
 
