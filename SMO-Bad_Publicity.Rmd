@@ -17,6 +17,7 @@ library(tidyr)
 library(anytime)
 library(writexl)
 library(readxl)
+library(MASS)
 ```
 
 ```{r data set, echo=FALSE}
@@ -122,9 +123,9 @@ prodat
 ```{r data set, echo=FALSE}
 #new data set with all the important variables
 
-pro <-  select(prodat, pen, nclaim1, nclaim2, jahrn, monatn, tagn, etag, tini, tinitx1, tinitx2, tinico1, tinico2, tinifu1, tinifu2, tverb, tverb1, tverb2, tverbco1, tverbco2, tverbfu1, tverbfu2, kam, kamco, tallzahl, nclaim1, nclaim2, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, tote, artzahl, etag, form1, form2, schaden, festnahm, ort1, ort2, brd1, brd2, zahl, formtx)
+pro <-  dplyr::select(prodat, pen, nclaim1, nclaim2, jahrn, monatn, tagn, etag, tini, tinitx1, tinitx2, tinico1, tinico2, tinifu1, tinifu2, tverb, tverb1, tverb2, tverbco1, tverbco2, tverbfu1, tverbfu2, kam, kamco, tallzahl, nclaim1, nclaim2, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, tote, artzahl, etag, form1, form2, schaden, festnahm, ort1, ort2, brd1, brd2, zahl, formtx)
 
-p <- select(pro, jahrn, monatn, tagn, etag, tinico1, tinico2, tinifu1, tinifu2, tverbco1, tverbco2, tverbfu1, tverbfu2, tallzahl, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, artzahl, etag, form1, form2, schaden, festnahm, zahl, formtx, ort1)
+p <- dplyr::select(pro, jahrn, monatn, tagn, etag, tinico1, tinico2, tinifu1, tinifu2, tverbco1, tverbco2, tverbfu1, tverbfu2, tallzahl, vstate, vstabe1, vstabe2, sstate, statbe1, statbe2, verletzt, artzahl, etag, form1, form2, schaden, festnahm, zahl, formtx, ort1)
 
 p$etag <- as.character(p$etag)
 p$tinifu1 <- as.character(p$tinifu1)
@@ -155,7 +156,7 @@ p <- p %>% mutate(i_bewert = coalesce(vstate, sstate)) %>%
            mutate(i_bewertint = coalesce(vstabe1, vstabe2)) %>%
            mutate(i_bewertpol = coalesce(statbe1, statbe2)) %>%
            mutate(form = coalesce(form1, form2)) %>%
-         select(i_bewert, i_codeini, i_codeverb, i_bewertint, i_bewertpol, zahl, verletzt, artzahl, etag, festnahm, schaden, form, formtx, jahrn, monatn, tagn, ort1)
+         dplyr::select(i_bewert, i_codeini, i_codeverb, i_bewertint, i_bewertpol, zahl, verletzt, artzahl, etag, festnahm, schaden, form, formtx, jahrn, monatn, tagn, ort1)
 
 
 
@@ -281,24 +282,15 @@ write_xlsx(p,"/Users/sophiehensgen/Webscraping-LS-Methode/Protets/prodat-ready-f
 
 p <-  arrange(p, i_codeini, date)
 write_xlsx(p,"/Users/sophiehensgen/Webscraping-LS-Methode/Protets/prodat-ready-for-edit-2.xlsx")
- # n_distinct(p$i_codeverb)
 
-#iris %>% 
- # group_by(i_codeverb) %>% 
-  #mutate(diff)
- #                                     
-  #select(date, i_codeverb, zahl)%>%
-  #mutate(iris, sepal )
-   
   
- d <-  p %>%
-    select(date, i_codeverb) %>%
-    spread(date)
 
 ```
 
 
 ```{r kick out every observation that did not appear at least twice in our data set, echo=FALSE}
+## nicht wichtig
+
 p <-  arrange(p, i_codeverb, date)
 
 p[p$i_codeverb %in% names(which(table(p$i_codeverb) == 1)), ]
@@ -309,6 +301,9 @@ p <-  arrange(p, i_codeini, date)
 p[p$i_codeini %in% names(which(table(p$i_codeini) > 1)), ]
 
 ```
+##################################################################################
+##################################################################################
+##################################################################################
 
 ```{r load data set, echo=FALSE}
 
@@ -323,56 +318,62 @@ pverbc
 
 ```
 
-```{r subset & , echo=FALSE}
+
+##################################################################################
+##################################################################################
+##################################################################################
+
+```{r subset & description , echo=FALSE}
+
 q <- subset(pverbc, diff >= 1)
 
-lapply(q[, c("diff", "i_bewertint")], table)
+# Bewertung Interest group & politisch administrative Seite
 
-w <- subset(pini, diff >= 1)
+lapply(q[, c("diff", "i_bewertint", "i_bewertpol", "schaden", "verletzt", "form", "etag")], table)
 
-lapply(w[, c("diff", "i_bewertint")], table)
 ```
+```{r destription, echo=FALSE}
+
+#subset prior so you don't have any nas in it
+c <- q %>% 
+  dplyr::select(diff, i_bewertint, schaden, verletzt, festnahm, form, etag, stand)%>%
+  na.omit(schaden, verletzt)
+
+e <- q %>% 
+  dplyr::select(diff, i_bewertpol, schaden, verletzt, festnahm, form, etag, stand)%>%
+  na.omit(i_berwertpol, schaden, verletzt, festnahm, form, etag)
+
+```
+
 
 ```{r x tabs of main iv, echo=FALSE}
 
-ftable(xtabs(~ diff + i_bewertint, data = q))
-ftable(xtabs(~ diff + i_bewertpol, data = q))
+ftable(xtabs(~ diff + i_bewertint, data = c)) # kicking out c_no change as it has only two observations
+ftable(xtabs(~ diff + i_bewertpol, data = e))
 
-ftable(xtabs(~ diff + i_bewertint, data = w))
-ftable(xtabs(~ diff + i_bewertpol, data = w))
+#ftable(xtabs(~ diff + i_bewertint, data = w)) --> not going to use the data set pini as it has not enough observations
+#ftable(xtabs(~ diff + i_bewertpol, data = w))
 ```
 
 ```{r summary of iv, echo=FALSE}
 
-summary(q$i_bewertint)
-summary(q$i_bewertpol)
+summary(c$i_bewertint)
+summary(e$i_bewertpol)
 
-summary(w$i_bewertint)
-summary(w$i_bewertpol)
+#summary(w$i_bewertint)
+#summary(w$i_bewertpol)
 ```
 
 ```{r standard deviation, echo=FALSE}
-sd(q$i_bewertint)
-sd(q$i_bewertpol)
+sd(c$i_bewertint)
+sd(e$i_bewertpol)
 
-sd(w$i_bewertint)
-sd(w$i_bewertpol)
+#sd(w$i_bewertint)
+#sd(w$i_bewertpol)
 ```
 
-```{r distribution, echo=FALSE}
 
-#subset prior so you dont have any nas in it
-c <- q %>% 
-  select(diff, i_bewertint, schaden, verletzt)%>%
-  na.omit(schaden, verletzt)
-
-v <- w %>% 
-  select(diff, i_bewertint, schaden, verletzt)%>%
-  na.omit(schaden, verletzt)
-
-```
-
-```{r distribution, echo=FALSE}
+```{r description, echo=FALSE}
 
 ggplot(c, aes(x = diff, y = i_bewertint, group = schaden)) +
   geom_boxplot(size = .75) +
@@ -381,25 +382,201 @@ ggplot(c, aes(x = diff, y = i_bewertint, group = schaden)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 
 
-ggplot(v, aes(x = diff, y = i_bewertint, group = schaden)) +
+ggplot(e, aes(x = diff, y = i_bewertpol, group = schaden)) +
   geom_boxplot(size = .75) +
   geom_jitter(alpha = .5) +
   facet_grid(schaden ~ verletzt, margins = TRUE) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 ```
 
+##################################################################################
+##################################################################################
+##################################################################################
 
 
+```{r ordered logistic regression - pverbc, echo=FALSE}
+#### regression for pverbc
+c$diff <- as.factor(c$diff)
+e$diff <- as.factor(e$diff)
 
-```{r ordered logistic regression, echo=FALSE}
 
+## Evaluation interest group
 ## fit ordered logit model and store results 'm'
-m <- polr(apply ~ pared + public + gpa, data = dat, Hess=TRUE)
+m <- polr(diff ~ i_bewertint, data = c, Hess=TRUE)
+mp <- polr(diff ~ i_bewertint, data = c, Hess=TRUE, method = "probit")
+
+
+## predicted probabilities
+m.pred <- predict(mm, type="probs")
+summary(m.pred)
+
+setup1 <- data.frame(verletzt = rep(mean(c$verletzt),3),
+                     schaden = rep(mean(c$schaden),3),
+                     festnahm = rep(mean(c$festnahm),3),
+                     stand= rep(mean(c$stand),3),
+                     i_bewertint=c(0,1,2))
+setup1
+
+setupprob <- predict(mm, newdata=setup1, type="probs") 
+
+setup <- cbind(setup1, setupprob)
+setup
+
+## fit ordered logit model and store results 'mm' plus control variables
+mm <- polr(diff ~ i_bewertint + verletzt + schaden + festnahm + stand, data = c, Hess=TRUE)
 
 ## view a summary of the model
 summary(m)
+summary(mm)
+
+## evaluation political side
+
+## fit ordered logit model and store results 'n'
+n <- polr(diff ~ i_bewertpol, data = e, Hess=TRUE, method = "logistic")
+
+## fit ordered logit model and store results 'nn'
+nn <- polr(diff ~ i_bewertpol + verletzt + schaden + festnahm + etag + stand, data = e, Hess=TRUE)
+
+## view a summary of the model
+summary(n)
+summary(nn)
 
 ```
+
+```{r p value - pverbc & i_bewertini, echo=FALSE}
+# simple regression
+## store table
+cmtable <- coef(summary(m))
+
+## calculate and store p values
+pvm <- pnorm(abs(cmtable[, "t value"]), lower.tail = FALSE) * 2
+
+## combined table
+cmtable <- cbind(cmtable, "p value" = pvm)
+cmtable
+
+##############################################################
+# multiple regression
+## store table
+cmmtable <- coef(summary(mm))
+
+## calculate and store p values
+pvmm <- pnorm(abs(cmmtable[, "t value"]), lower.tail = FALSE) * 2
+
+## combined table
+cmmtable <- cbind(cmmtable, "p value" = pvmm)
+cmmtable
+
+```
+
+```{r p value - pverbc & i_bewertpol, echo=FALSE}
+
+# simple regression
+## store table
+cntable <- coef(summary(n))
+
+## calculate and store p values
+pvn <- pnorm(abs(cntable[, "t value"]), lower.tail = FALSE) * 2
+
+## combined table
+cntable <- cbind(cntable, "p value" = pvn)
+cntable
+
+##############################################################
+
+# multiple regression
+## store table
+cnntable <- coef(summary(nn))
+
+## calculate and store p values
+pvnn <- pnorm(abs(cnntable[, "t value"]), lower.tail = FALSE) * 2
+
+## combined table
+cnntable <- cbind(cnntable, "p value" = pvnn)
+cnntable
+```
+
+
+
+```{r confidence interval & OR - pverbc, echo=FALSE}
+## Evaluation by interest group
+
+cim <- confint(m)
+cim
+
+## odds ratios
+exp(coef(m))
+
+## OR and CI
+exp(cbind(OR = coef(m), cim))
+
+##############################################################
+
+cimm <- confint(mm)
+cimm
+
+## odds ratios
+exp(coef(mm))
+
+## OR and CI
+exp(cbind(OR = coef(mm), cimm))
+```
+
+```{r confidence interval & OR - pverbc, echo=FALSE}
+## Evaluation by political side
+
+cin <- confint(n)
+cin
+
+## odds ratios
+exp(coef(n))
+
+## OR and CI
+exp(cbind(OR = coef(n), cin))
+
+##############################################################
+
+cinn <- confint(nn)
+cinn
+
+## odds ratios
+exp(coef(nn))
+
+## OR and CI
+exp(cbind(OR = coef(nn), cinn))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
